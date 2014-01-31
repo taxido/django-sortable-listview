@@ -1,4 +1,7 @@
+import urllib
+
 from django.views.generic import ListView
+from django.http import QueryDict
 
 
 class SortableListView(ListView):
@@ -7,6 +10,8 @@ class SortableListView(ListView):
     allowed_sort_fields = {default_sort_field: {'default_direction': '-',
                                                 'verbose_name': 'ID'}}
     sort_parameter = 'sort'  # the get parameter e.g. ?page=1&sort=2
+    sort_with_querystring = False
+    sort_without_pagination = False
     # End of Defaults
 
     @property
@@ -113,11 +118,24 @@ class SortableListView(ListView):
 
     def get_basic_sort_link(self, request, field):
         """
-        This will obliterate any other query parameters in your url. This is
+        For default this will obliterate any other query parameters in your url. This is
         often useful. For example, if we're using pagination as well, when we
         re-order we probably want to start back at page 1.
+
         """
         sort_string = self.get_next_sort_string(field)
+
+        if self.sort_with_querystring:
+            query_params = request.GET.copy()
+            if sort_string:
+                query_params.update(QueryDict(sort_string))
+            else:
+                if self.sort_parameter in query_params:
+                    query_params.pop(self.sort_parameter)
+            if self.sort_without_pagination:
+                if 'page' in query_params:
+                    query_params.pop('page')
+            return request.path + '?' + urllib.urlencode(query_params)
         if sort_string:
             return request.path + '?' + sort_string
         else:
