@@ -128,14 +128,21 @@ class SortableListView(ListView):
         if self.sort_with_querystring:
             query_params = dict(request.GET.copy())
             if sort_string:
-                query_params.update(sort_string)
+                query_params.update(QueryDict(sort_string))
             else:
                 if self.sort_parameter in query_params:
                     query_params.pop(self.sort_parameter)
             if self.sort_without_pagination:
                 if 'page' in query_params:
                     query_params.pop('page')
-            return request.path + '?' + urllib.urlencode(query_params)
+		params = []
+		for name, value in query_params.iteritems():
+                    if type(value) is list:
+                        for val in value:
+                            params.append((name, val))
+                    else:
+                        params.append((name, value))
+            return request.path + '?' + urllib.urlencode(params)
         if sort_string:
             return request.path + '?' + sort_string
         else:
