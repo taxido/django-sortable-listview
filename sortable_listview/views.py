@@ -126,9 +126,9 @@ class SortableListView(ListView):
         sort_string = self.get_next_sort_string(field)
 
         if self.sort_with_querystring:
-            query_params = request.GET.copy()
+            query_params = dict(request.GET.copy())
             if sort_string:
-                query_params.update(QueryDict(sort_string))
+                query_params.update(sort_string)
             else:
                 if self.sort_parameter in query_params:
                     query_params.pop(self.sort_parameter)
