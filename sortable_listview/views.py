@@ -1,4 +1,9 @@
-import urllib
+from __future__ import unicode_literals
+
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 from django.views.generic import ListView
 from django.http import QueryDict
@@ -12,6 +17,7 @@ class SortableListView(ListView):
     sort_parameter = 'sort'  # the get parameter e.g. ?page=1&sort=2
     sort_with_querystring = False
     sort_without_pagination = False
+    del_query_parameters = ['page']  # get paramaters we don't want to preserve
     # End of Defaults
 
     @property
@@ -36,6 +42,7 @@ class SortableListView(ListView):
         context = super(SortableListView,
                         self).get_context_data(**kwargs)
         context['current_sort_query'] = self.get_sort_string()
+        context['current_querystring'] = self.get_querystring()
         context['sort_link_list'] = self.sort_link_list
         return context
 
@@ -43,6 +50,25 @@ class SortableListView(ListView):
         qs = super(SortableListView, self).get_queryset()
         qs = qs.order_by(self.sort)
         return qs
+
+    def get_querystring_parameter_to_remove(self):
+        """
+        Return list of GET parameters that should be removed from querystring
+        """
+        return self.del_query_parameters + [self.sort_parameter]
+
+    def get_querystring(self):
+        """
+        Clean existing query string (GET parameters) by removing
+        arguments that we don't want to preserve (sort parameter, 'page')
+        """
+        to_remove = self.get_querystring_parameter_to_remove()
+        query_dict = self.request.GET.copy()
+        for arg in to_remove:
+            if arg in query_dict:
+                del query_dict[arg]
+        query_string = urlencode(query_dict)
+        return query_string
 
     def set_sort(self, request):
         """
@@ -122,7 +148,10 @@ class SortableListView(ListView):
         often useful. For example, if we're using pagination as well, when we
         re-order we probably want to start back at page 1.
 
+        Thanks to del_query_parameters and get_querystring, we build the link
+        with preserving interesting get parameters and removing the others
         """
+        query_string = self.get_querystring()
         sort_string = self.get_next_sort_string(field)
 
         if self.sort_with_querystring:
@@ -144,6 +173,11 @@ class SortableListView(ListView):
                         params.append((name, value))
             return request.path + '?' + urllib.urlencode(params)
         if sort_string:
-            return request.path + '?' + sort_string
+            sort_link = request.path + '?' + sort_string
+            if query_string:
+                sort_link += '&' + query_string
         else:
-            return request.path
+            sort_link = request.path
+            if query_string:
+                sort_link += '?' + query_string
+        return sort_link

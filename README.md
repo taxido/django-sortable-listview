@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/aptivate/django-sortable-listview.svg?branch=master)](https://travis-ci.org/aptivate/django-sortable-listview) [![Coverage Status](https://coveralls.io/repos/aptivate/django-sortable-listview/badge.svg?branch=master)](https://coveralls.io/r/aptivate/django-sortable-listview?branch=master)
+
 django-sortable-listview
 ========================
 An extension of django's ListView that provides sorting.
@@ -9,6 +11,16 @@ Features:
 - Knows what the next sort is (i.e. if you're already sorted by title in one direction, clicking on the title button/link again will sort it in the other direction).
 - Lets you specify default sort for your list (defaults to -id) and for each of the sortable fields.
 - Modifies the queryset, so your database does your sorting.
+- Maintains additional query strings (configurable)
+
+Requirements
+============
+
+    * Python (2.6, 2.7, 3.2, 3.3, 3.4)
+    * Django (1.4, 1.5, 1.6, 1.7)
+
+(Tested against the latest version of each e.g. currently Python 2.7.4 & Django 1.5.12)
+
 
 Install
 =======
@@ -40,6 +52,14 @@ You should be able to see the example project at localhost:8000. A database is p
 Development and Tests
 =====================
 
+For your development setup::
+
+    pip install -r requirements-dev.txt
+
 To run the tests::
 
-    python setup.py test
+    tox
+
+You may not want to run the whole tox suite when you are doing development. 
+In this case, uncomment the extra lines in requirements-dev.txt, but please
+don't commit these changes. (Suggestions welcome on a better way to manage this)
